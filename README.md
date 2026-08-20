@@ -16,9 +16,9 @@ A beautiful, minimalistic Islamic live wallpaper built with HTML, CSS, JavaScrip
 ![Settings Panel](screenshots/settings.png)
 *Hovering in the top right reveals the unified control panel to adjust both text and clock settings.*
 
-**Clock with Seconds & 12H Format**
+**Clock with Seconds & 24H Format**
 ![Clock Options](screenshots/clock-options.png)
-*Showcasing the clock with seconds toggled on and the 24H format turned off.*
+*Showcasing the clock with seconds toggled on and the 12H format turned off.*
 
 ---
 
