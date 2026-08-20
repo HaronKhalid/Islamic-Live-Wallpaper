@@ -15,5 +15,5 @@ A beautiful, minimalistic Islamic live wallpaper built with HTML, CSS, and JavaS
 - Vanilla JavaScript
 - Google Fonts (`Amiri`, `Cinzel`, `Noto Nastaliq Urdu`)
 
-## Usage
-Simply open `1.html` in any modern web browser to view the live wallpaper. Hover to access the settings panel for adjusting animation speeds.
+## How to use
+- If you use Lively Wallpaper in windows just add this folder to the Lively Wallpaper and open `index.html` file in the Lively Wallpaper.
