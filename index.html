@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Islamic Minimal Live Wallpaper</title>
+  <title>Islamic Minimal Live Wallpaper - Liquid Glass</title>
   
   <!-- Nastaliq for main calligraphy & Amiri / Cinzel for verses & clock -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,33 +16,49 @@
       margin: 0;
       padding: 0;
       user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+    }
+
+    *:focus {
+      outline: none !important;
+      box-shadow: none;
     }
 
     body, html {
-      width: 100%;
-      height: 100%;
+      width: 100vw;
+      height: 100vh;
       overflow: hidden;
       background-color: #0b0706;
       font-family: 'Amiri', serif;
     }
 
-    /* Background image layer */
-    .bg-container {
+    /* WebGL Canvas Container */
+    #canvas-container {
       position: absolute;
-      inset: 0;
-      background: url('bg.jpg') no-repeat center center;
-      background-size: cover;
-      z-index: 1;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1; /* behind everything */
+      pointer-events: none; /* Let pointer events pass to body for tracking */
     }
 
-
+    #webgl-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
 
     /* Central Content Box */
     .content-wrapper {
       position: absolute;
       top: 50%;
       left: 50%;
-      transform: translate(-50%, -50%);
+      transform: translate(-50%, -30%); /* Shifted down slightly to make room for clock */
       z-index: 10;
       display: flex;
       flex-direction: column;
@@ -76,29 +92,13 @@
     }
 
     @keyframes inkReveal {
-      0% {
-        opacity: 0;
-        filter: blur(10px);
-        transform: scale(0.95) translateY(8px);
-      }
-      100% {
-        opacity: 1;
-        filter: blur(0px);
-        transform: scale(1) translateY(0);
-      }
+      0% { opacity: 0; filter: blur(10px); transform: scale(0.95) translateY(8px); }
+      100% { opacity: 1; filter: blur(0px); transform: scale(1) translateY(0); }
     }
 
     @keyframes inkDissolve {
-      0% {
-        opacity: 1;
-        filter: blur(0px);
-        transform: scale(1);
-      }
-      100% {
-        opacity: 0;
-        filter: blur(12px);
-        transform: scale(1.03) translateY(-6px);
-      }
+      0% { opacity: 1; filter: blur(0px); transform: scale(1); }
+      100% { opacity: 0; filter: blur(12px); transform: scale(1.03) translateY(-6px); }
     }
 
     /* Divider */
@@ -110,9 +110,7 @@
       opacity: 0;
       transition: opacity var(--trans-speed, 1.8s) ease;
     }
-    .divider.show {
-      opacity: 0;
-    }
+    .divider.show { opacity: 0; /* original behavior */ }
 
     /* Verse Box */
     .verse-container {
@@ -124,10 +122,7 @@
       transition: opacity var(--trans-speed, 1.8s) ease, transform var(--trans-speed, 1.8s) ease;
     }
 
-    .verse-container.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    .verse-container.show { opacity: 1; transform: translateY(0); }
 
     .arabic-verse {
       font-family: 'Amiri', serif;
@@ -158,7 +153,7 @@
       direction: ltr;
     }
 
-    /* Controls Panel - Top Right Corner */
+    /* Controls Panel - Top Right Corner - Merged */
     .controls-panel {
       position: absolute;
       top: 20px;
@@ -175,21 +170,19 @@
       z-index: 100;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
       opacity: 0;
       transition: opacity 0.3s ease;
       direction: ltr;
     }
 
-    .controls-panel:hover, .controls-panel:focus-within {
-      opacity: 1;
-    }
+    .controls-panel:hover, .controls-panel:focus-within { opacity: 1; }
 
     .control-group {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
     }
 
     .control-group label {
@@ -203,6 +196,46 @@
       accent-color: #d1b89d;
     }
 
+    /* iOS-style Toggle Switch */
+    .ios-switch {
+      position: relative;
+      display: inline-block;
+      width: 36px;
+      height: 20px;
+    }
+
+    .ios-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider-switch {
+      position: absolute;
+      cursor: pointer !important;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(255, 255, 255, 0.2);
+      transition: 0.25s;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .slider-switch:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: 0.25s;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    input:checked + .slider-switch { background-color: rgba(255, 255, 255, 0.85); }
+    input:checked + .slider-switch:before { transform: translateX(16px); background-color: #0c0c10; }
+
     .hint-tag {
       position: absolute;
       top: 20px;
@@ -214,20 +247,25 @@
       pointer-events: none;
       direction: ltr;
     }
-
-
   </style>
+
+  <!-- Local Standalone Bundled Three.js -->
+  <script src="./three.bundle.js"></script>
+  <!-- Embedded font and background asset data -->
+  <script src="./fonts_data.js"></script>
 </head>
 <body>
 
-  <div class="bg-container"></div>
-  <div class="vignette"></div>
-
-
+  <!-- WebGL Canvas Container for Liquid Glass Clock and Background -->
+  <div id="canvas-container">
+    <canvas id="webgl-canvas"></canvas>
+  </div>
+  
   <div class="hint-tag">⚙ Hover here for settings</div>
 
-  <!-- Settings in Top-Right -->
+  <!-- Merged Settings in Top-Right -->
   <div class="controls-panel">
+    <!-- Existing Text Timings -->
     <div class="control-group">
       <label>Display Time: <span id="val-display">8</span>s</label>
       <input type="range" id="input-display" min="4" max="30" value="8" step="1">
@@ -235,6 +273,33 @@
     <div class="control-group">
       <label>Transition: <span id="val-trans">1.8</span>s</label>
       <input type="range" id="input-trans" min="0.6" max="3.5" value="1.8" step="0.1">
+    </div>
+    <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 2px 0;">
+    <!-- Liquid Glass Clock Settings -->
+    <div class="control-group">
+      <label id="height-label">Clock Height 100%</label>
+      <input id="height-slider" type="range" min="0.60" max="1.15" step="0.01" value="1.00">
+    </div>
+    <div class="control-group">
+      <label id="format-label" for="format-checkbox">24H Format</label>
+      <label class="ios-switch">
+        <input type="checkbox" id="format-checkbox" checked />
+        <span class="slider-switch"></span>
+      </label>
+    </div>
+    <div class="control-group">
+      <label for="seconds-checkbox">Show Seconds</label>
+      <label class="ios-switch">
+        <input type="checkbox" id="seconds-checkbox" />
+        <span class="slider-switch"></span>
+      </label>
+    </div>
+    <div class="control-group">
+      <label for="parallax-checkbox">Clock Parallax</label>
+      <label class="ios-switch">
+        <input type="checkbox" id="parallax-checkbox" checked />
+        <span class="slider-switch"></span>
+      </label>
     </div>
   </div>
 
@@ -250,7 +315,9 @@
   </div>
 
   <script>
-    // Spiritual Words & Quranic Verses
+    // ==========================================
+    // 1. SPIRITUAL TEXT LOGIC
+    // ==========================================
     const spiritualList = [
       {
         word: "توکل",
@@ -296,7 +363,6 @@
     const verseTrans = document.getElementById('verse-trans');
     const verseRef = document.getElementById('verse-ref');
 
-    // Controls
     const inputDisplay = document.getElementById('input-display');
     const inputTrans = document.getElementById('input-trans');
     const valDisplay = document.getElementById('val-display');
@@ -321,21 +387,16 @@
 
     function showItem(index) {
       const data = spiritualList[index];
-
-      // Update text
       wordElem.textContent = data.word;
       verseArabic.textContent = data.verse;
       verseTrans.textContent = data.trans;
       verseRef.textContent = data.ref;
 
-      // Animate In
       wordElem.className = 'main-word ink-draw-in';
       dividerElem.classList.add('show');
       verseBox.classList.add('show');
 
-      // Set timeout for next transition
       cycleTimer = setTimeout(() => {
-        // Animate Out
         wordElem.className = 'main-word ink-fade-out';
         dividerElem.classList.remove('show');
         verseBox.classList.remove('show');
@@ -353,11 +414,325 @@
       showItem(currentIndex);
     }
 
-
-
-    // Start
     updateTimingVariables();
     showItem(currentIndex);
+
+    // ==========================================
+    // 2. THREE.JS LIQUID GLASS CLOCK LOGIC
+    // ==========================================
+    const THREE = window.THREE;
+    const {
+      WebGLRenderer, Scene, PerspectiveCamera, PMREMGenerator, RoomEnvironment,
+      DirectionalLight, MeshPhysicalMaterial, Group, Mesh, ShaderMaterial,
+      PlaneGeometry, Vector2, TextureLoader, FontLoader, TextGeometry, Clock,
+      Color, ACESFilmicToneMapping,
+    } = THREE;
+
+    const FONT_CONFIG = {
+      size: 0.6,
+      sizeWithSeconds: 0.5,
+      mobileSize: 0.5,
+      mobileSizeWithSeconds: 0.4,
+      letterSpacing: -0.005,
+      bevelThickness: 0.02,
+    };
+
+    let heightScale = 1.0;
+    let cornerRoundness = 0.010;
+    let is24Hour = true;
+    let showSeconds = false;
+    let parallaxEnabled = true;
+    let bgZoomScale = 1.05;
+
+    let parsedFont = null;
+    const pointer = { x: 0, y: 0, targetX: 0, targetY: 0 };
+    let lastRenderTime = "";
+
+    const canvas = document.getElementById("webgl-canvas");
+    const renderer = new WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.toneMapping = ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.2;
+
+    const scene = new Scene();
+    const camera = new PerspectiveCamera(5, window.innerWidth / window.innerHeight, 0.01, 1000);
+    camera.position.set(0, 0, 25);
+    camera.lookAt(0, 0, 0);
+
+    const pmremGenerator = new PMREMGenerator(renderer);
+    scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+
+    const dirLight = new DirectionalLight(0xffffff, 8);
+    dirLight.position.set(0.4, 1, -0.2);
+    scene.add(dirLight);
+
+    const glassMaterial = new MeshPhysicalMaterial({
+      color: new Color(0xffffff),
+      roughness: 0.23,
+      transmission: 1.0,
+      ior: 1.8,
+      thickness: 2.0,
+      reflectivity: 0.4,
+      clearcoat: 0.2,
+      clearcoatRoughness: 0.1,
+      iridescence: 1.0,
+      iridescenceIOR: 0.9,
+      iridescenceThicknessRange: [233, 434],
+    });
+
+    const clockGroup = new Group();
+    // Position clock higher up in the screen
+    clockGroup.position.set(0, 0.6, 0); 
+    scene.add(clockGroup);
+    let textMesh = null;
+
+    const bgMaterial = new ShaderMaterial({
+      uniforms: {
+        map: { value: null },
+        viewportResolution: { value: new Vector2(window.innerWidth, window.innerHeight) },
+        imageResolution: { value: new Vector2(1920, 1080) },
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        varying vec2 vScreenPos;
+        void main() {
+          vUv = uv;
+          vScreenPos = position.xy;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D map;
+        uniform vec2 viewportResolution;
+        uniform vec2 imageResolution;
+        varying vec2 vUv;
+        varying vec2 vScreenPos;
+        void main() {
+          float viewportAspect = viewportResolution.x / viewportResolution.y;
+          float imageAspect = imageResolution.x / imageResolution.y;
+          vec2 screenUV = (vScreenPos + 1.0) * 0.5;
+          float scale;
+          vec2 offset = vec2(0.0);
+          if (imageAspect > viewportAspect) {
+            scale = viewportAspect / imageAspect;
+            offset.x = (1.0 - scale) * 0.5;
+            screenUV.x = screenUV.x * scale + offset.x;
+          } else {
+            scale = imageAspect / viewportAspect;
+            offset.y = (1.0 - scale) * 0.5;
+            screenUV.y = screenUV.y * scale + offset.y;
+          }
+          screenUV = clamp(screenUV, 0.0, 1.0);
+          vec4 texColor = texture2D(map, screenUV);
+          vec3 finalColor = mix(texColor.rgb, vec3(0.0, 0.0, 0.0), 0.2);
+          gl_FragColor = vec4(finalColor, 1.0);
+        }
+      `,
+      depthWrite: false,
+    });
+
+    const bgPlane = new Mesh(new PlaneGeometry(1, 1), bgMaterial);
+    bgPlane.position.set(0, 0, -1.5);
+    scene.add(bgPlane);
+
+    let vPlaneWidth = 1;
+    let vPlaneHeight = 1;
+
+    function updateBgDimensions() {
+      const vFov = (camera.fov * Math.PI) / 180;
+      vPlaneHeight = 2 * Math.tan(vFov / 2) * (camera.position.z - bgPlane.position.z);
+      vPlaneWidth = vPlaneHeight * camera.aspect;
+      bgMaterial.uniforms.viewportResolution.value.set(window.innerWidth, window.innerHeight);
+    }
+
+    const textureLoader = new TextureLoader();
+    // Use the live-wallpaper background image
+    textureLoader.load("./bg.jpg", (tex) => {
+      if (tex.image && tex.image.width && tex.image.height) {
+        bgMaterial.uniforms.imageResolution.value.set(tex.image.width, tex.image.height);
+      }
+      bgMaterial.uniforms.map.value = tex;
+    });
+
+    const fontLoader = new FontLoader();
+    function getFont() {
+      if (parsedFont) return parsedFont;
+      if (window.FONTS_DATA && window.FONTS_DATA.Morganite_Medium) {
+        parsedFont = fontLoader.parse(window.FONTS_DATA.Morganite_Medium);
+        return parsedFont;
+      }
+      return null;
+    }
+
+    function formatTime() {
+      const now = new Date();
+      const h24 = now.getHours();
+      let h = h24;
+      if (!is24Hour) {
+        h = h24 % 12;
+        if (h === 0) h = 12;
+      }
+      const hours = String(h).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const seconds = String(now.getSeconds()).padStart(2, "0");
+
+      if (showSeconds) {
+        return `${hours}:${minutes}:${seconds}`;
+      }
+      return `${hours}:${minutes}`;
+    }
+
+    function getLayoutString() {
+      if (showSeconds) return "00:00:00";
+      return "00:00";
+    }
+
+    function updateClock() {
+      const timeStr = formatTime();
+      const isMobile = window.innerWidth < 768;
+      
+      let size;
+      if (showSeconds) {
+        size = isMobile ? FONT_CONFIG.mobileSizeWithSeconds : FONT_CONFIG.sizeWithSeconds;
+      } else {
+        size = isMobile ? FONT_CONFIG.mobileSize : FONT_CONFIG.size;
+      }
+
+      const font = getFont();
+      if (!font) return;
+
+      const geom = new TextGeometry(timeStr, {
+        font: font,
+        size: size,
+        height: 0.08,
+        bevelEnabled: true,
+        bevelSize: isMobile ? cornerRoundness * 0.75 : cornerRoundness,
+        bevelSegments: 10,
+        curveSegments: 16,
+        bevelThickness: FONT_CONFIG.bevelThickness,
+      });
+
+      const layoutGeom = new TextGeometry(getLayoutString(), {
+        font: font,
+        size: size,
+        height: 0.08,
+        bevelEnabled: false,
+        bevelSize: 0,
+        bevelSegments: 1,
+        curveSegments: 4,
+        bevelThickness: 0,
+      });
+      layoutGeom.computeBoundingBox();
+      const layoutBox = layoutGeom.boundingBox;
+      layoutGeom.dispose();
+
+      geom.computeBoundingBox();
+      const actualBox = geom.boundingBox;
+      const offsetX = -((layoutBox.max.x + layoutBox.min.x) / 2);
+      const offsetY = -((actualBox.max.y + actualBox.min.y) / 2);
+      geom.translate(offsetX, offsetY, 0);
+
+      if (textMesh) {
+        textMesh.geometry.dispose();
+        textMesh.geometry = geom;
+        textMesh.position.set(0, 0, 0);
+      } else {
+        textMesh = new Mesh(geom, glassMaterial);
+        textMesh.position.set(0, 0, 0);
+        clockGroup.add(textMesh);
+      }
+
+      clockGroup.scale.set(1, heightScale, 1);
+      lastRenderTime = timeStr;
+    }
+
+    updateClock();
+    updateBgDimensions();
+
+    setInterval(() => {
+      const nextTime = formatTime();
+      if (nextTime !== lastRenderTime) {
+        updateClock();
+      }
+    }, 200);
+
+    window.addEventListener("pointermove", (e) => {
+      if (parallaxEnabled) {
+        pointer.targetX = (e.clientX / window.innerWidth) * 2 - 1;
+        pointer.targetY = -(e.clientY / window.innerHeight) * 2 + 1;
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      updateBgDimensions();
+      updateClock();
+    });
+
+    // Clock Settings UI Listeners
+    const heightSlider = document.getElementById("height-slider");
+    const heightLabel = document.getElementById("height-label");
+    heightSlider.addEventListener("input", (e) => {
+      heightScale = parseFloat(e.target.value);
+      heightLabel.textContent = `Clock Height ${Math.round(heightScale * 100)}%`;
+      clockGroup.scale.set(1, heightScale, 1);
+    });
+
+    const formatCheckbox = document.getElementById("format-checkbox");
+    const formatLabel = document.getElementById("format-label");
+    formatCheckbox.addEventListener("change", (e) => {
+      is24Hour = e.target.checked;
+      formatLabel.textContent = is24Hour ? "24H Format" : "12H Format";
+      lastRenderTime = "";
+      updateClock();
+    });
+
+    const secondsCheckbox = document.getElementById("seconds-checkbox");
+    secondsCheckbox.addEventListener("change", (e) => {
+      showSeconds = e.target.checked;
+      lastRenderTime = "";
+      updateClock();
+    });
+
+    const parallaxCheckbox = document.getElementById("parallax-checkbox");
+    parallaxCheckbox.addEventListener("change", (e) => {
+      parallaxEnabled = e.target.checked;
+      if (!parallaxEnabled) {
+        pointer.targetX = 0;
+        pointer.targetY = 0;
+      }
+    });
+
+    const clock3D = new Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const delta = Math.min(clock3D.getDelta(), 0.1);
+
+      pointer.x += (pointer.targetX - pointer.x) * (delta * 6);
+      pointer.y += (pointer.targetY - pointer.y) * (delta * 6);
+
+      const targetZoom = parallaxEnabled ? 1.02 : 1.0;
+      bgZoomScale += (targetZoom - bgZoomScale) * (delta * 5);
+      bgPlane.scale.set(vPlaneWidth * bgZoomScale, vPlaneHeight * bgZoomScale, 1);
+
+      const targetPosX = parallaxEnabled ? -pointer.x * 0.04 : 0;
+      const targetPosY = parallaxEnabled ? -pointer.y * 0.025 : 0;
+      bgPlane.position.x += (targetPosX - bgPlane.position.x) * (delta * 5);
+      bgPlane.position.y += (targetPosY - bgPlane.position.y) * (delta * 5);
+
+      const targetLightX = parallaxEnabled ? pointer.x : 0.4;
+      const targetLightY = parallaxEnabled ? pointer.y : 1.0;
+      dirLight.position.x += (targetLightX - dirLight.position.x) * (delta * 6);
+      dirLight.position.y += (targetLightY - dirLight.position.y) * (delta * 6);
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
   </script>
 </body>
 </html>
