@@ -281,23 +281,23 @@
       <input id="height-slider" type="range" min="0.60" max="1.15" step="0.01" value="1.00">
     </div>
     <div class="control-group">
-      <label id="format-label" for="format-checkbox">24H Format</label>
+      <label id="format-label" for="format-checkbox">12H Format</label>
       <label class="ios-switch">
-        <input type="checkbox" id="format-checkbox" checked />
+        <input type="checkbox" id="format-checkbox" />
         <span class="slider-switch"></span>
       </label>
     </div>
     <div class="control-group">
       <label for="seconds-checkbox">Show Seconds</label>
       <label class="ios-switch">
-        <input type="checkbox" id="seconds-checkbox" />
+        <input type="checkbox" id="seconds-checkbox" checked />
         <span class="slider-switch"></span>
       </label>
     </div>
     <div class="control-group">
       <label for="parallax-checkbox">Clock Parallax</label>
       <label class="ios-switch">
-        <input type="checkbox" id="parallax-checkbox" checked />
+        <input type="checkbox" id="parallax-checkbox" />
         <span class="slider-switch"></span>
       </label>
     </div>
@@ -439,10 +439,10 @@
 
     let heightScale = 1.0;
     let cornerRoundness = 0.010;
-    let is24Hour = true;
-    let showSeconds = false;
-    let parallaxEnabled = true;
-    let bgZoomScale = 1.05;
+    let is24Hour = false;
+    let showSeconds = true;
+    let parallaxEnabled = false;
+    let bgZoomScale = 10;
 
     let parsedFont = null;
     const pointer = { x: 0, y: 0, targetX: 0, targetY: 0 };
